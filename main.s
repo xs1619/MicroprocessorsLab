@@ -5,37 +5,56 @@ main:
 	org 0x0
 	goto	setup
 	
-	org 0x100		    ; Main code starts here at address 0x100
+	org 0x100	    
 
-	; ******* Programme FLASH read Setup Code ****  
-setup:	
-	bcf	CFGS	; point to Flash program memory  
-	bsf	EEPGD 	; access Flash program memory
-	goto	start
-	; ******* My data and where to put it in RAM *
+setup:
+        bcf CFGS              ; Point to Flash program memory
+        bsf EEPGD             ; Access program memory
+        clrf PORTH            ; Clear PORTH 
+        movlw 0x00
+        movwf TRISH           ; Set PORTH as output
+        goto start            ; Jump to main program
+
 myTable:
-	db	'T','h','i','s',' ','i','s',' ','j','u','s','t'
-	db	' ','s','o','m','e',' ','d','a','t','a'
-	myArray EQU 0x400	; Address in RAM for data
-	counter EQU 0x10	; Address of counter variable
-	align	2		; ensure alignment of subsequent instructions 
-	; ******* Main programme *********************
-start:	
-	lfsr	0, myArray	; Load FSR0 with address in RAM	
-	movlw	low highword(myTable)	; address of data in PM
-	movwf	TBLPTRU, A	; load upper bits to TBLPTRU
-	movlw	high(myTable)	; address of data in PM
-	movwf	TBLPTRH, A	; load high byte to TBLPTRH
-	movlw	low(myTable)	; address of data in PM
-	movwf	TBLPTRL, A	; load low byte to TBLPTRL
-	movlw	22		; 22 bytes to read
-	movwf 	counter, A	; our counter register
-loop:
-        tblrd*+			; move one byte from PM to TABLAT, increment TBLPRT
-	movff	TABLAT, POSTINC0	; move read data from TABLAT to (FSR0), increment FSR0	
-	decfsz	counter, A	; count down to zero
-	bra	loop		; keep going until finished
-	
-	goto	0
+        db 0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80 ; LED patterns
+        db 0xAA, 0x55         ; Additional patterns for flashing
+    
+        myArray EQU 0x400         ; ()
+        counter EQU 0x08          ; Set counter to the number of patterns in myTable
+        delay_count EQU 0x10
+        ;align	2		; ensure alignment of subsequent instructions
+ 
+start:
 
-	end	main
+        lfsr 0, myArray       ; ()
+        movlw low highword(myTable)
+        movwf TBLPTRU, A         ; Load upper bits of myTable address
+        movlw high(myTable)
+        movwf TBLPTRH, A         ; Load high byte of myTable address
+        movlw low(myTable)
+        movwf TBLPTRL, A         ; Load low byte of myTable address
+        movlw counter         ; Load counter with the number of patterns
+        movwf counter, A
+
+loop:
+
+        tblrd*+               
+        movff TABLAT, PORTH   ; Output to PORTH 
+	call delay
+        decfsz counter, A     
+        bra loop              
+        goto 0   
+	
+;delay 10 seconds
+delay:
+        movlw 0xff
+	movwf delay_count
+	
+delay_loop:
+        decfsz delay_count, A
+	bra delay_loop
+	
+	return 
+        end main
+
+
