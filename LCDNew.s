@@ -3,7 +3,7 @@
 global  myTable, myTable_l, myTable2, myTable2_l
 extrn	UART_Setup, UART_Transmit_Message  ; external subroutines
 extrn	LCD_Setup, LCD_Write_Message, LCD_line2
-extrn   DHT22_Read, Read_Byte, Read_Bit, delay_short, hum_data, temp_data
+extrn   DHT22_Setup, DHT22_Read, Read_Byte, delay_short, hum_data, temp_data, Read_Bit
     
 psect	udata_acs   ; reserve data space in access ram
 counter:    ds 1    ; reserve one byte for a counter variable
@@ -30,6 +30,7 @@ rst: 	org 0x0
 	; ******* Programme FLASH read Setup Code ***********************
 setup:	bcf	CFGS	; point to Flash program memory  
 	bsf	EEPGD 	; access Flash program memory
+	call	DHT22_Setup
 	call	UART_Setup	; setup UART
 	call	LCD_Setup	; setup UART
 	goto	start
@@ -92,7 +93,7 @@ loop2: 	tblrd*+			; one byte from PM to TABLAT, increment TBLPRT
 	; a delay subroutine if you need one, times around loop in delay_count
 delay:	decfsz	delay_count, A	; decrement until zero
 	bra	delay
-	;return 
+	return 
 	;goto $
 
 	end	rst
