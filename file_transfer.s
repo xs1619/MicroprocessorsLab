@@ -200,3 +200,54 @@ Convert_To_String:
 
     return
 
+
+
+
+
+
+
+
+
+
+#include <xc.inc>
+
+global Convert_To_String ; Make this function available to other files
+
+psect udata_acs
+digit_temp: ds 1        ; Temporary storage for division remainder
+
+psect code
+Convert_To_String:
+    ; Input: W holds the number to convert (8-bit unsigned integer)
+    ; Output: ASCII digits are stored in myArray
+    ; Requires: FSR2 must point to myArray before calling this subroutine
+
+    ; Initialize FSR2 to point to myArray
+    lfsr    2, myArray
+
+    ; Step 1: Divide number in W by 100 to get hundreds digit
+    movlw   100
+    divwf   digit_temp, W      ; Divide W by 100
+    movf    WREG, W            ; Quotient (hundreds digit) now in W
+    addlw   '0'                ; Convert to ASCII
+    movwf   POSTINC2           ; Store ASCII digit in myArray
+
+    ; Step 2: Remainder from previous division is in digit_temp
+    movf    digit_temp, W      ; Move remainder into W
+    movlw   10
+    divwf   digit_temp, W      ; Divide W by 10 to get tens digit
+    movf    WREG, W            ; Quotient (tens digit) now in W
+    addlw   '0'                ; Convert to ASCII
+    movwf   POSTINC2           ; Store ASCII digit in myArray
+
+    ; Step 3: Units digit
+    movf    digit_temp, W      ; Move final remainder into W
+    addlw   '0'                ; Convert to ASCII
+    movwf   POSTINC2           ; Store ASCII digit in myArray
+
+    ; Step 4: Null-terminate the string
+    movlw   0x00
+    movwf   POSTINC2           ; Null-terminate the string
+
+    return
+
