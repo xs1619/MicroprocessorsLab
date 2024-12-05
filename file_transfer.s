@@ -251,3 +251,58 @@ Convert_To_String:
 
     return
 
+
+
+
+
+
+
+
+
+Convert_To_String:
+    ; Converts a 16-bit binary number in WREG to an ASCII string.
+    ; Input: Binary number in WREG, Output: ASCII string stored in myArray
+    ; Assumes myArray is large enough to hold the result.
+    movwf temp_data, A         ; Store the input number temporarily
+    clrf myArray, A           ; Clear the array for the result
+    movlw 10                  ; Divisor for decimal conversion
+    movwf delay_count, A      ; Use delay_count as a divisor register
+    
+    ; Divide the number by 10 to extract decimal digits
+loop_div:
+    movf temp_data, W, A      ; Load the current number
+    subwf delay_count, W      ; Subtract divisor
+    btfsc STATUS, C           ; If carry set, division succeeded
+    bra loop_div              ; Repeat the division
+    
+    ; Convert the remainder to ASCII and store in myArray
+    movlw '0'                 ; ASCII offset for digits
+    addwf temp_data, F, A     ; Add offset to remainder
+    movwf POSTINC0, A         ; Store the result in myArray
+    
+    return                    ; Return to caller
+
+    ; Main loop modification to use Convert_To_String and display results
+start:
+    call DHT22_Read           ; Read temperature and humidity from the sensor
+
+    ; Convert temperature to string
+    movf temp_data, W, A
+    call Convert_To_String
+
+    ; Display the temperature on LCD
+    movlw myTable_l           ; Output temperature message to LCD
+    lfsr 2, myArray
+    call LCD_Write_Message
+
+    call LCD_line2            ; Move to the second line of the LCD
+
+    ; Convert humidity to string
+    movf hum_data, W, A
+    call Convert_To_String
+
+    ; Display the humidity on LCD
+    movlw myTable2_l          ; Output humidity message to LCD
+    lfsr 2, myArray
+    call LCD_Write_Message
+
