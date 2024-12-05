@@ -40,7 +40,7 @@ Convert_To_String:
     movwf   POSTINC2          ; Store ASCII digit in myArray
 
     ; Step 4: Null-terminate the string
-    movlw   0x00
+    clrf    WREG
     movwf   POSTINC2          ; Null-terminate the string
 
     return
