@@ -166,3 +166,37 @@ start:
 
     end
 
+
+
+#include <xc.inc>
+
+global Convert_To_String ; Make this function available to other files
+
+psect udata_acs
+digit_temp: ds 1         ; Temporary storage for division remainder
+
+psect code
+Convert_To_String:
+    ; Input: W holds the number to convert
+    ; Output: ASCII digits are stored in myArray
+
+    ; Initialize FSR2 to point to myArray
+    lfsr    2, myArray
+
+    ; Divide number by 10 to get the tens digit
+    movlw   10
+    divwf   digit_temp, W      ; Divide W by 10
+    movf    digit_temp, W      ; Get the remainder
+    addlw   '0'                ; Convert to ASCII
+    movwf   POSTINC2           ; Store ASCII digit in myArray
+
+    ; The quotient is now in W (the tens digit)
+    addlw   '0'                ; Convert to ASCII
+    movwf   POSTINC2           ; Store ASCII digit in myArray
+
+    ; Null-terminate the string
+    movlw   0x00
+    movwf   POSTINC2
+
+    return
+
