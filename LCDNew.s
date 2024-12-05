@@ -3,7 +3,9 @@
 global  myTable, myTable_l, myTable2, myTable2_l
 extrn	UART_Setup, UART_Transmit_Message  ; external subroutines
 extrn	LCD_Setup, LCD_Write_Message, LCD_line2
-extrn   DHT22_Setup, DHT22_Read, Read_Byte, delay_short, hum_data, temp_data, Read_Bit
+extrn   DHT22_Setup, DHT22_Read, Read_Byte, delay_short, Read_Bit
+extrn   hum_data, temp_data
+extrn   Convert_To_String
     
 psect	udata_acs   ; reserve data space in access ram
 counter:    ds 1    ; reserve one byte for a counter variable
@@ -19,7 +21,7 @@ myTable:
 	myTable_l   EQU	8	; length of data
 	
 myTable2:   
-        db  'H','u','m','i','d','i','t','y',':',0x0a ; message, plus carriage return
+        db  'H','u','m','i','d',-'i','t','y',':',0x0a ; message, plus carriage return
         myTable2_l  EQU 10  ; length of data
 	align	2
 	
@@ -32,7 +34,7 @@ setup:	bcf	CFGS	; point to Flash program memory
 	bsf	EEPGD 	; access Flash program memory
 	call	DHT22_Setup
 	call	UART_Setup	; setup UART
-	call	LCD_Setup	; setup UART
+	call	LCD_Setup	; setup LCD
 	goto	start
 	
 	; ******* Main programme ****************************************
@@ -56,13 +58,19 @@ loop: 	tblrd*+			; one byte from PM to TABLAT, increment TBLPRT
 	lfsr	2, myArray
 	call	UART_Transmit_Message
 
+	lfsr    0, temp_data
+	movf    POSTINC0, W
+	lfsr    2, myArray
+	call    Convert_To_String
+	
+	;Write temp to LCD
 	movlw	myTable_l	; output message to LCD
 	addlw	0xff		; don't send the final carriage return to LCD
-	lfsr	2, myArray
-	call	LCD_Write_Message
-	
-	call	LCD_line2
+	lfsr	2, myArray      ;Load address of myArray
+	call	LCD_Write_Message ;Write temp label + value to LCD
+	call	LCD_line2       ;Move to next line for humidity
 
+	;Display
 	lfsr	0, myArray	; Load FSR0 with address in RAM	
 	movlw	low highword(myTable2)	; address of data in PM
 	movwf	TBLPTRU, A		; load upper bits to TBLPTRU
@@ -81,6 +89,11 @@ loop2: 	tblrd*+			; one byte from PM to TABLAT, increment TBLPRT
 	movlw	myTable2_l	; output message to UART
 	lfsr	2, myArray
 	call	UART_Transmit_Message
+	
+	lfsr    0, hum_data
+	movf    POSTINC0, W
+	lfsr    2, myArray
+	call    Convert_To_String
 
 	movlw	myTable2_l	; output message to LCD
 	addlw	0xff		; don't send the final carriage return to LCD
@@ -89,6 +102,7 @@ loop2: 	tblrd*+			; one byte from PM to TABLAT, increment TBLPRT
 	
 	;call	LCD_line2
 	
+	goto    start
 	
 	; a delay subroutine if you need one, times around loop in delay_count
 delay:	decfsz	delay_count, A	; decrement until zero
@@ -98,5 +112,4 @@ delay:	decfsz	delay_count, A	; decrement until zero
 
 	end	rst
 	
-
 
