@@ -1,23 +1,67 @@
-Convert_To_String:
-    ; Assume counter holds the MSB of the temperature (integer part)
+#include <xc.inc>
+
+global Convert_To_String
+
+psect	udata_bank4 ; reserve data anywhere in RAM (here at 0x400)
+myArray:    ds 0x80 ; reserve 128 bytes for message data
     
-    ; Convert the integer part of the temperature to string
-    movf    counter, W         ; Get the integer part (MSB of temperature)
-    call    Digit_To_Ascii     ; Convert it to ASCII and store in myArray
-    lfsr    2, myArray         ; Load FSR2 with address of myArray
-    movf    POSTINC2, W        ; Move the ASCII value into W
-    call    Digit_To_Ascii     ; Convert the next digit (LSB of temp_data) to ASCII and store
+psect udata_acs
+digit_temp: ds 1         ; Temporary storage for division remainder
+quotient:   ds 1         ; Temporary storage for quotient
 
-    ; Convert the decimal part (if needed)
-    lfsr    0, temp_data       ; Load FSR0 with address of temp_data
-    movf    POSTINC0, W        ; Get the LSB of the temperature (decimal part)
-    call    Digit_To_Ascii     ; Convert decimal part to ASCII and store in myArray
+psect code
+    
+Convert_To_String:
+    ; Input: W holds the number to convert
+    ; Output: ASCII digits are stored in myArray
+    ; Requires: FSR2 must point to myArray before calling this subroutine
+
+    ; Initialize FSR2 to point to myArray
+    lfsr    2, myArray
+
+    ; Step 1: Divide number by 100 to get the hundreds digit
+    movlw   100
+    call    Divide            ; Perform division
+    movf    quotient, W       ; Get quotient (hundreds digit)
+    addlw   '0'               ; Convert to ASCII
+    movwf   POSTINC2          ; Store ASCII digit in myArray
+
+    ; Step 2: Divide remainder by 10 to get the tens digit
+    movf    digit_temp, W     ; Move remainder to W
+    movlw   10
+    call    Divide            ; Perform division
+    movf    quotient, W       ; Get quotient (tens digit)
+    addlw   '0'               ; Convert to ASCII
+    movwf   POSTINC2          ; Store ASCII digit in myArray
+
+    ; Step 3: Remainder is the units digit
+    movf    digit_temp, W     ; Get the units digit
+    addlw   '0'               ; Convert to ASCII
+    movwf   POSTINC2          ; Store ASCII digit in myArray
+
+    ; Step 4: Null-terminate the string
+    movlw   0x00
+    movwf   POSTINC2          ; Null-terminate the string
+
     return
 
-Digit_To_Ascii:
-    ; Convert a single digit in W register to its ASCII representation
-    addlw   '0'                ; Add ASCII value of '0' to convert number to ASCII
-    movwf   POSTINC2           ; Store ASCII character in myArray and increment FSR2
+Divide:
+    ; Perform division of W by movlw value
+    ; Input: W holds dividend, movlw holds divisor
+    ; Output: quotient -> stored in `quotient`
+    ;         remainder -> stored in `digit_temp`
+
+    clrf    quotient          ; Clear quotient
+    clrf    digit_temp        ; Clear remainder
+
+Divide_Loop:
+    subwf   digit_temp, W     ; Subtract divisor from dividend
+    btfss   STATUS, 0         ; Check if result is positive
+    goto    Divide_Done
+    movwf   digit_temp
+    incf    quotient, F
+    goto    Divide_Loop
+
+Divide_Done:
+    
     return
-
-
