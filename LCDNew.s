@@ -1,12 +1,15 @@
 #include <xc.inc>
 
 global  myTable, myTable_l, myTable2, myTable2_l
-extrn	UART_Setup, UART_Transmit_Message  ; external subroutines
-extrn	LCD_Setup, LCD_Write_Message, LCD_line2
-extrn   DHT22_Setup, DHT22_Read, Read_Byte, delay_short, Read_Bit
-extrn   hum_data, temp_data
-extrn   Convert_To_String
+extrn	UART_Setup, UART_Transmit_Message, UART_Transmit_Byte  ; external subroutines
+extrn	LCD_Setup, LCD_Write_Message, LCD_line1, LCD_line2, LCD_Send_Byte_D
+extrn   DHT22_Setup, DHT22_Read, Read_Byte, delay_short, Read_Bit, data_buffer
+
     
+temp_data EQU data_buffer
+hum_data EQU data_buffer+2
+data_sum EQU data_buffer+4
+
 psect	udata_acs   ; reserve data space in access ram
 counter:    ds 1    ; reserve one byte for a counter variable
 delay_count:ds 1    ; reserve one byte for counter in the delay routine
@@ -15,13 +18,13 @@ psect	udata_bank4 ; reserve data anywhere in RAM (here at 0x400)
 myArray:    ds 0x80 ; reserve 128 bytes for message data
 
 psect	data    
-	; ******* myTable, data in programme memory, and its length *****
+;	 ******* myTable, data in programme memory, and its length *****
 myTable:   
 	db	'T','e','m','p','(',')',':',0x0a ; message, plus carriage return
 	myTable_l   EQU	8	; length of data
 	
 myTable2:   
-        db  'H','u','m','i','d',-'i','t','y',':',0x0a ; message, plus carriage return
+        db  'H','u','m','i','d','i','t','y',':',0x0a ; message, plus carriage return
         myTable2_l  EQU 10  ; length of data
 	align	2
 	
@@ -39,7 +42,11 @@ setup:	bcf	CFGS	; point to Flash program memory
 	
 	; ******* Main programme ****************************************
 start: 	call    DHT22_Read      ; read data from DHT22 sensor
-    
+	;movf	temp_data, W
+	;movlw	8
+	;call	LCD_Send_Byte_D
+	;call	UART_Transmit_Byte
+	;goto	start
         lfsr	0, myArray	; Load FSR0 with address in RAM	
 	movlw	low highword(myTable)	; address of data in PM
 	movwf	TBLPTRU, A		; load upper bits to TBLPTRU
@@ -58,10 +65,10 @@ loop: 	tblrd*+			; one byte from PM to TABLAT, increment TBLPRT
 	lfsr	2, myArray
 	call	UART_Transmit_Message
 
-	lfsr    0, temp_data
-	movf    POSTINC0, W
-	lfsr    2, myArray
-	call    Convert_To_String
+	;lfsr    0, temp_data
+	;movf    POSTINC0, W
+	;lfsr    2, myArray
+	;call    Convert_To_String
 	
 	;Write temp to LCD
 	movlw	myTable_l	; output message to LCD
@@ -90,15 +97,16 @@ loop2: 	tblrd*+			; one byte from PM to TABLAT, increment TBLPRT
 	lfsr	2, myArray
 	call	UART_Transmit_Message
 	
-	lfsr    0, hum_data
-	movf    POSTINC0, W
-	lfsr    2, myArray
-	call    Convert_To_String
+	;lfsr    0, hum_data
+	;movf    POSTINC0, W
+	;lfsr    2, myArray
+	;call    Convert_To_String
 
 	movlw	myTable2_l	; output message to LCD
 	addlw	0xff		; don't send the final carriage return to LCD
 	lfsr	2, myArray
 	call	LCD_Write_Message
+	call	LCD_line1       ;Move to next line for humidity
 	
 	;call	LCD_line2
 	
