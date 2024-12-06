@@ -1,6 +1,6 @@
 #include <xc.inc>
 
-global Convert_To_String
+
 
 psect	udata_bank4 ; reserve data anywhere in RAM (here at 0x400)
 myArray:    ds 0x80 ; reserve 128 bytes for message data
@@ -9,7 +9,7 @@ psect udata_acs
 digit_temp: ds 1         ; Temporary storage for division remainder
 quotient:   ds 1         ; Temporary storage for quotient
 
-psect code
+psect	convert_string_code,class=CODE
     
 Convert_To_String:
     ; Input: W holds the number to convert
