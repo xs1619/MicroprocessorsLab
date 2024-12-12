@@ -4,7 +4,8 @@ global  myTable, myTable_l, myTable2, myTable2_l
 extrn	UART_Setup, UART_Transmit_Message, UART_Transmit_Byte  ; external subroutines
 extrn	LCD_Setup, LCD_Write_Message, LCD_line1, LCD_line2, LCD_Send_Byte_D
 extrn   DHT22_Setup, DHT22_Read, Read_Byte, delay_short, Read_Bit, data_buffer
-    
+;extrn   HexToDec, DivideLoop, Result 
+
 temp_data EQU data_buffer
 hum_data EQU data_buffer+2
 data_sum EQU data_buffer+4
