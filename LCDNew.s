@@ -4,10 +4,10 @@ global  myTable, myTable_l, myTable2, myTable2_l
 extrn	UART_Setup, UART_Transmit_Message, UART_Transmit_Byte  
 extrn	LCD_Setup, LCD_Write_Message, LCD_line1, LCD_line2, LCD_Send_Byte_D
 extrn   DHT22_Setup, DHT22_Read, Read_Byte, delay_short, Read_Bit, data_buffer
-extrn   HexToDec, Divide_Loop, Subtract, Division
+extrn   HexToDec, HexToDec2, Divide_Loop, Subtract, Division, temp, temph
 
-temp_data EQU data_buffer
-hum_data EQU data_buffer+2
+hum_data EQU data_buffer
+temp_data EQU data_buffer+2
 data_sum EQU data_buffer+4
 
 psect	udata_acs   ; reserve data space in access ram
@@ -75,6 +75,13 @@ loop: 	tblrd*+			; one byte from PM to TABLAT, increment TBLPRT
 	addlw	0xff		; don't send the final carriage return to LCD
 	lfsr	2, myArray      ;Load address of myArray
 	call	LCD_Write_Message ;Write temp label + value to LCD
+	movff	data_buffer+2, temph
+	movff	data_buffer+3, temp
+	call	HexToDec
+	movlw   '^'              
+	call    LCD_Send_Byte_D
+	movlw   'C'              
+	call    LCD_Send_Byte_D
 	call	LCD_line2       ;Move to next line for humidity
 
 	;Display
@@ -100,12 +107,16 @@ loop2: 	tblrd*+			; one byte from PM to TABLAT, increment TBLPRT
 	;lfsr    0, hum_data
 	;movf    POSTINC0, W
 	;lfsr    2, myArray
-	;call    Convert_To_String
 
 	movlw	myTable2_l	; output message to LCD
 	addlw	0xff		; don't send the final carriage return to LCD
 	lfsr	2, myArray
 	call	LCD_Write_Message
+	movff	data_buffer, temph
+	movff	data_buffer+1, temp
+	call	HexToDec
+	movlw   '%'              
+	call    LCD_Send_Byte_D
 	call	LCD_line1       ;Move to next line for humidity
 	
 	;call	LCD_line2
