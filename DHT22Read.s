@@ -16,13 +16,13 @@ DHT22_Setup:
     banksel PADCFG1
     bsf     RJPU
     banksel 0
-    setf    TRISJ 
-    clrf    TRISD
+    setf    TRISJ, A 
+    clrf    TRISD, A
     return
 
 DHT22_Read:
     ; Initialize the sensor
-    setf    LATD
+    setf    LATD, A
     movlw   90 
     call    LCD_delay_ms
     bcf     TRISJ, 0, A       ; Set RH0 as output
