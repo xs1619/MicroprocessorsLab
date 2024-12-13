@@ -4,7 +4,7 @@ global  myTable, myTable_l, myTable2, myTable2_l
 extrn	UART_Setup, UART_Transmit_Message, UART_Transmit_Byte  
 extrn	LCD_Setup, LCD_Write_Message, LCD_line1, LCD_line2, LCD_Send_Byte_D
 extrn   DHT22_Setup, DHT22_Read, Read_Byte, delay_short, Read_Bit, data_buffer
-extrn   HexToDec, HexToDec2, Divide_Loop, Subtract, Division, temp, temph
+extrn   HexToDec, Divide_Loop, Subtract, Division, temp, temph
 
 hum_data EQU data_buffer
 temp_data EQU data_buffer+2
