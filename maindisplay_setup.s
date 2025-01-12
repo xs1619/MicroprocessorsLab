@@ -40,23 +40,6 @@ maindisplay_setup:
 	call	LCD_Setup	; setup LCD
 	return
 	
-	; ******* Main programme ****************************************
-maindisplay_start:	
-	call	fan_on
-	call	update
-	call	one_min
-	call	update
-	call	fan_off
-	call	heater_on
-	call	one_min
-	call	update
-	call	heater_off
-	return
-	
-	
-;	goto    start
-	
-
 	end	
 	
 
