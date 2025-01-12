@@ -58,20 +58,6 @@ start:
 	call	fan_on
 	call	loop5
 
-;	call	delayf
-;	call	pump_on
-;	call	delayf
-;	call	pump_off
-;	call	update
-;	call	delayf
-;	;call	five_minute
-;	;call	thirty_seconds
-;	call	heater_off
-;	call	update
-;	;call	five_minute
-;	call	delayf
-;	;call	thirty_seconds
-	goto	start
 	
 loop5:	
 	movlw	5
