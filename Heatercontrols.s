@@ -1,5 +1,5 @@
 #include <xc.inc>
-global heater_setup, heater_on, heater_off, thirty_seconds, five_minute, delayf, one_min
+global heater_setup, heater_on, heater_off, thirty_seconds, five_minute, delayf 
 extrn LCD_delay_ms
 
  psect udata_acs
@@ -91,11 +91,6 @@ five_minute:
     call    thirty_seconds
     return
 	
-    
-one_min:
-    call    thirty_seconds
-    call    thirty_seconds
-    return
     end
 
 
